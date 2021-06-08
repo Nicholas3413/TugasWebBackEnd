@@ -13,6 +13,9 @@ const conn = new sql.ConnectionPool({
     trustedConnection: true
   }
 })
+const routerUser=require('./routers/users.js')
+const auth=require('./middlewares/auth.js')
+
 
 app.get('/', (req, res)=>{
  res.send(
@@ -26,8 +29,10 @@ app.get('/', (req, res)=>{
  </html>`
  )
 })
- 
-app.post('/todo', (req, res)=>{
+
+
+
+app.post('/todo',auth, (req, res)=>{
  console.log('sudah terhandle oleh post di /todo')
  console.log(req.body.deskripsi)
 
@@ -36,16 +41,18 @@ app.post('/todo', (req, res)=>{
     conn.connect().then(()=>{
        conn.query(sql, (err, result) => {
         if (!err) {
-            console.log('Successfully added information.');
+            console.log('Successfully added information.')
+            
         } else {
             console.log(result)
             console.log('Was not able to add information to database.');
         } 
     })
 })
+    res.json({id:404,deskripsi:req.body.deskripsi})
 })
  
-app.get('/todo', (req, res) => {
+app.get('/todo',auth, (req, res) => {
     conn.connect().then(()=>{
        conn.query('Select * from todo', (err, result) => {
            res.json(result.recordset)
@@ -53,7 +60,7 @@ app.get('/todo', (req, res) => {
 })
 })
 
-app.delete('/todo/:id',(req,res)=>{
+app.delete('/todo/:id',auth,(req,res)=>{
     console.log("sedang dihapus")
     conn.connect().then(()=>{
         const que="Delete from todo where id='"+req.params.id+"'"
@@ -64,5 +71,7 @@ app.delete('/todo/:id',(req,res)=>{
         })
     })
 })
- 
+
+app.use(routerUser)
+
 app.listen(3000)
